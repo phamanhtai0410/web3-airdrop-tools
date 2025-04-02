@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - Airdrop Manager{% endblock %}
+
+{% block header_title %}Account Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Accounts</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAccountsModal">
+            <i class="fas fa-user-plus"></i> Create Accounts
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" id="search-accounts" class="form-control" placeholder="Search accounts...">
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" id="refresh-accounts">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#registerPlatformsModal">
+                        <i class="fas fa-sign-in-alt"></i> Register
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="accounts-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Twitter</th>
+                        <th>Telegram</th>
+                        <th>Discord</th>
+                        <th>Created</th>
+                        <th>Proxy</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if accounts %}
+                        {% for account in accounts %}
+                        <tr>
+                            <td>{{ account.email }}</td>
+                            <td>
+                                <div class="password-field">
+                                    <span class="password-mask">••••••••</span>
+                                    <span class="password-value d-none">{{ account.password }}</span>
+                                    <button class="btn btn-sm btn-link toggle-password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td>
+                                {% if account.platforms and account.platforms.twitter and account.platforms.twitter.registered %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> {{ account.platforms.twitter.username }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Registered</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if account.platforms and account.platforms.telegram and account.platforms.telegram.registered %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> {{ account.platforms.telegram.username }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Registered</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if account.platforms and account.platforms.discord and account.platforms.discord.registered %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> {{ account.platforms.discord.username }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Registered</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ account.created_date }}</td>
+                            <td>
+                                {% if account.proxy %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-network-wired"></i> Set
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary account-details-btn" data-email="{{ account.email }}">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger account-delete-btn" data-email="{{ account.email }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">No accounts found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Accounts Modal -->
+<div class="modal fade" id="createAccountsModal" tabindex="-1" aria-labelledby="createAccountsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createAccountsModalLabel">Create New Accounts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-accounts-form">
+                    <div class="mb-3">
+                        <label for="account-count" class="form-label">Number of Accounts</label>
+                        <input type="number" class="form-control" id="account-count-input" min="1" max="20" value="5">
+                        <div class="form-text">How many accounts to create</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email-domain" class="form-label">Email Domain</label>
+                        <input type="text" class="form-control" id="email-domain" value="gmail.com">
+                        <div class="form-text">Domain for new email accounts</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="use-proxy" checked>
+                        <label class="form-check-label" for="use-proxy">Use Proxy</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="create-accounts-btn">Create Accounts</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Register Platforms Modal -->
+<div class="modal fade" id="registerPlatformsModal" tabindex="-1" aria-labelledby="registerPlatformsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerPlatformsModalLabel">Register on Platforms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="register-platforms-form">
+                    <div class="mb-3">
+                        <label for="platforms" class="form-label">Platforms</label>
+                        <input type="text" class="form-control" id="platforms" value="twitter,telegram,discord">
+                        <div class="form-text">Comma-separated list of platforms</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="all-accounts" checked>
+                        <label class="form-check-label" for="all-accounts">Register All Accounts</label>
+                    </div>
+                    <div class="mb-3" id="specific-account-div" style="display: none;">
+                        <label for="specific-account" class="form-label">Specific Account Email</label>
+                        <input type="email" class="form-control" id="specific-account">
+                        <div class="form-text">Email of the specific account to register</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="register-platforms-btn">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Details Modal -->
+<div class="modal fade" id="accountDetailsModal" tabindex="-1" aria-labelledby="accountDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="accountDetailsModalLabel">Account Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="account-details-content">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading account details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the account <span id="delete-account-email" class="fw-bold"></span>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to refresh accounts table
+    function refreshAccountsTable() {
+        location.reload();
+    }
+    
+    // Function to toggle password visibility
+    function setupPasswordToggles() {
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const passwordField = this.parentElement;
+                const maskSpan = passwordField.querySelector('.password-mask');
+                const valueSpan = passwordField.querySelector('.password-value');
+                const icon = this.querySelector('i');
+                
+                if (valueSpan.classList.contains('d-none')) {
+                    // Show password
+                    maskSpan.classList.add('d-none');
+                    valueSpan.classList.remove('d-none');
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    // Hide password
+                    maskSpan.classList.remove('d-none');
+                    valueSpan.classList.add('d-none');
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    }
+    
+    // Function to handle account details button
+    function setupAccountDetailsButtons() {
+        const detailsButtons = document.querySelectorAll('.account-details-btn');
+        detailsButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const email = this.getAttribute('data-email');
+                const detailsContent = document.getElementById('account-details-content');
+                detailsContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading account details...</p>
+                    </div>
+                `;
+                
+                // Open the modal
+                const modal = new bootstrap.Modal(document.getElementById('accountDetailsModal'));
+                modal.show();
+                
+                // Fetch account details
+                fetch(`/api/accounts?email=${encodeURIComponent(email)}`)
+                    .then(response => response.json())
+                    .then(accounts => {
+                        const account = accounts.find(a => a.email === email);
+                        if (account) {
+                            // Format platforms info
+                            let platformsHtml = '';
+                            if (account.platforms) {
+                                for (const [platform, data] of Object.entries(account.platforms)) {
+                                    const registered = data.registered ? 
+                                        `<span class="badge bg-success"><i class="fas fa-check"></i> Registered</span>` : 
+                                        `<span class="badge bg-secondary">Not Registered</span>`;
+                                    const username = data.username ? data.username : 'N/A';
+                                    const lastActivity = data.last_activity ? data.last_activity : 'Never';
+                                    
+                                    platformsHtml += `
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="mb-0">${platform.charAt(0).toUpperCase() + platform.slice(1)}</h5>
+                                                    ${registered}
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Username:</strong> ${username}</p>
+                                                <p><strong>Last Activity:</strong> ${lastActivity}</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            } else {
+                                platformsHtml = '<p class="text-center">No platform data available</p>';
+                            }
+                            
+                            // Format proxy info
+                            const proxyInfo = account.proxy ? 
+                                `<p><strong>Proxy:</strong> ${account.proxy}</p>` : 
+                                `<p><strong>Proxy:</strong> None</p>`;
+                            
+                            // Format user agent info
+                            const userAgentInfo = account.user_agent ? 
+                                `<p><strong>User Agent:</strong> ${account.user_agent}</p>` : 
+                                `<p><strong>User Agent:</strong> None</p>`;
+                            
+                            // Format notes
+                            const notesHtml = account.notes ? 
+                                `<div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Notes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre>${account.notes}</pre>
+                                    </div>
+                                </div>` : 
+                                `<div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Notes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-center">No notes available</p>
+                                    </div>
+                                </div>`;
+                            
+                            // Update modal content
+                            detailsContent.innerHTML = `
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">
+                                                <h5 class="mb-0">Account Information</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Email:</strong> ${account.email}</p>
+                                                <p><strong>Password:</strong> ${account.password}</p>
+                                                <p><strong>Created:</strong> ${account.created_date}</p>
+                                                ${proxyInfo}
+                                                ${userAgentInfo}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header bg-light">
+                                                <h5 class="mb-0">Platform Information</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                ${platformsHtml}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${notesHtml}
+                            `;
+                        } else {
+                            detailsContent.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> Account not found
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching account details:', error);
+                        detailsContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Error loading account details
+                            </div>
+                        `;
+                    });
+            });
+        });
+    }
+    
+    // Function to handle account deletion
+    function setupDeleteButtons() {
+        const deleteButtons = document.querySelectorAll('.account-delete-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const email = this.getAttribute('data-email');
+                document.getElementById('delete-account-email').textContent = email;
+                
+                // Open the modal
+                const modal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
+                modal.show();
+                
+                // Setup confirmation button
+                document.getElementById('confirm-delete-btn').setAttribute('data-email', email);
+            });
+        });
+        
+        // Handle delete confirmation
+        document.getElementById('confirm-delete-btn').addEventListener('click', function() {
+            const email = this.getAttribute('data-email');
+            
+            fetch(`/api/accounts/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `email=${encodeURIComponent(email)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal and refresh table
+                    bootstrap.Modal.getInstance(document.getElementById('deleteAccountModal')).hide();
+                    refreshAccountsTable();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting account:', error);
+                alert('An error occurred while deleting the account');
+            });
+        });
+    }
+    
+    // Function to handle search
+    function setupSearch() {
+        const searchInput = document.getElementById('search-accounts');
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#accounts-table tbody tr');
+            
+            rows.forEach(row => {
+                const email = row.cells[0].textContent.toLowerCase();
+                if (email.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up account management functionalities
+        setupPasswordToggles();
+        setupAccountDetailsButtons();
+        setupDeleteButtons();
+        setupSearch();
+        
+        // Refresh button
+        document.getElementById('refresh-accounts').addEventListener('click', refreshAccountsTable);
+        
+        // Toggle specific account input based on checkbox
+        document.getElementById('all-accounts').addEventListener('change', function() {
+            document.getElementById('specific-account-div').style.display = this.checked ? 'none' : 'block';
+        });
+        
+        // Create accounts button
+        document.getElementById('create-accounts-btn').addEventListener('click', function() {
+            const count = document.getElementById('account-count-input').value;
+            const domain = document.getElementById('email-domain').value;
+            const useProxy = document.getElementById('use-proxy').checked;
+            
+            const formData = new FormData();
+            formData.append('count', count);
+            formData.append('domain', domain);
+            formData.append('use_proxy', useProxy);
+            
+            fetch('/api/create_accounts', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('createAccountsModal')).hide();
+                    refreshAccountsTable();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating accounts:', error);
+                alert('An error occurred while creating accounts');
+            });
+        });
+        
+        // Register platforms button
+        document.getElementById('register-platforms-btn').addEventListener('click', function() {
+            const platforms = document.getElementById('platforms').value;
+            const allAccounts = document.getElementById('all-accounts').checked;
+            const specificAccount = document.getElementById('specific-account').value;
+            
+            const formData = new FormData();
+            formData.append('platforms', platforms);
+            if (!allAccounts && specificAccount) {
+                formData.append('email', specificAccount);
+            }
+            
+            fetch('/api/register_platforms', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('registerPlatformsModal')).hide();
+                    setTimeout(refreshAccountsTable, 2000);
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error registering platforms:', error);
+                alert('An error occurred while registering platforms');
+            });
+        });
+    });
+</script>
+{% endblock %}

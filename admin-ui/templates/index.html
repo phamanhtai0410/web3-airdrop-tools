@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Airdrop Manager{% endblock %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2>System Overview</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Accounts</h5>
+                <h2 class="card-text" id="account-count">Loading...</h2>
+                <p class="card-text"><small>Total managed accounts</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Proxies</h5>
+                <h2 class="card-text" id="proxy-count">Loading...</h2>
+                <p class="card-text"><small>Working proxies</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending Tasks</h5>
+                <h2 class="card-text" id="task-count">Loading...</h2>
+                <p class="card-text"><small>Tasks in queue</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Task Results</h5>
+                <h2 class="card-text" id="result-count">Loading...</h2>
+                <p class="card-text"><small>Completed task results</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <button type="button" class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#createAccountsModal">
+                            <i class="fas fa-user-plus"></i> Create Accounts
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button type="button" class="btn btn-success btn-lg w-100" data-bs-toggle="modal" data-bs-target="#registerPlatformsModal">
+                            <i class="fas fa-sign-in-alt"></i> Register Platforms
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <button type="button" class="btn btn-warning btn-lg w-100" data-bs-toggle="modal" data-bs-target="#airdropModal">
+                            <i class="fas fa-parachute-box"></i> Airdrop Participation
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button type="button" class="btn btn-info btn-lg w-100" data-bs-toggle="modal" data-bs-target="#importProxiesModal">
+                            <i class="fas fa-network-wired"></i> Import Proxies
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                <ul class="list-group list-group-flush" id="recent-activity">
+                    <li class="list-group-item text-center">Loading activity...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Accounts Modal -->
+<div class="modal fade" id="createAccountsModal" tabindex="-1" aria-labelledby="createAccountsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createAccountsModalLabel">Create New Accounts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-accounts-form">
+                    <div class="mb-3">
+                        <label for="account-count" class="form-label">Number of Accounts</label>
+                        <input type="number" class="form-control" id="account-count-input" min="1" max="20" value="5">
+                        <div class="form-text">How many accounts to create</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email-domain" class="form-label">Email Domain</label>
+                        <input type="text" class="form-control" id="email-domain" value="gmail.com">
+                        <div class="form-text">Domain for new email accounts</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="use-proxy" checked>
+                        <label class="form-check-label" for="use-proxy">Use Proxy</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="create-accounts-btn">Create Accounts</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Register Platforms Modal -->
+<div class="modal fade" id="registerPlatformsModal" tabindex="-1" aria-labelledby="registerPlatformsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerPlatformsModalLabel">Register on Platforms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="register-platforms-form">
+                    <div class="mb-3">
+                        <label for="platforms" class="form-label">Platforms</label>
+                        <input type="text" class="form-control" id="platforms" value="twitter,telegram,discord">
+                        <div class="form-text">Comma-separated list of platforms</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="all-accounts" checked>
+                        <label class="form-check-label" for="all-accounts">Register All Accounts</label>
+                    </div>
+                    <div class="mb-3" id="specific-account-div" style="display: none;">
+                        <label for="specific-account" class="form-label">Specific Account Email</label>
+                        <input type="email" class="form-control" id="specific-account">
+                        <div class="form-text">Email of the specific account to register</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="register-platforms-btn">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Airdrop Participation Modal -->
+<div class="modal fade" id="airdropModal" tabindex="-1" aria-labelledby="airdropModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="airdropModalLabel">Airdrop Participation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="airdrop-form">
+                    <div class="mb-3">
+                        <label for="airdrop-name" class="form-label">Airdrop Name</label>
+                        <input type="text" class="form-control" id="airdrop-name" required>
+                        <div class="form-text">Name of the airdrop project</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="airdrop-platform" class="form-label">Platform</label>
+                        <select class="form-select" id="airdrop-platform">
+                            <option value="twitter" selected>Twitter</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="discord">Discord</option>
+                        </select>
+                        <div class="form-text">Platform where the airdrop is taking place</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="airdrop-actions" class="form-label">Actions</label>
+                        <input type="text" class="form-control" id="airdrop-actions" value="follow,retweet,like">
+                        <div class="form-text">Comma-separated list of actions to perform</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="airdrop-btn">Participate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Proxies Modal -->
+<div class="modal fade" id="importProxiesModal" tabindex="-1" aria-labelledby="importProxiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importProxiesModalLabel">Import Proxies</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="import-proxies-form">
+                    <div class="mb-3">
+                        <label for="proxy-list" class="form-label">Proxy List</label>
+                        <textarea class="form-control" id="proxy-list" rows="10" placeholder="Format: ip:port or ip:port:user:pass (one per line)"></textarea>
+                        <div class="form-text">Enter one proxy per line</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="import-proxies-btn">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to update dashboard stats
+    function updateStats() {
+        fetch('/api/accounts')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('account-count').textContent = data.length || 0;
+            })
+            .catch(error => {
+                console.error('Error fetching accounts:', error);
+                document.getElementById('account-count').textContent = 'Error';
+            });
+            
+        fetch('/api/proxies')
+            .then(response => response.json())
+            .then(data => {
+                const workingProxies = data.filter(proxy => proxy.fail_count < 3).length;
+                document.getElementById('proxy-count').textContent = workingProxies + '/' + data.length;
+            })
+            .catch(error => {
+                console.error('Error fetching proxies:', error);
+                document.getElementById('proxy-count').textContent = 'Error';
+            });
+            
+        fetch('/api/tasks')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('task-count').textContent = data.task_count;
+                document.getElementById('result-count').textContent = data.result_count;
+            })
+            .catch(error => {
+                console.error('Error fetching tasks:', error);
+                document.getElementById('task-count').textContent = 'Error';
+                document.getElementById('result-count').textContent = 'Error';
+            });
+    }
+    
+    // Function to update recent activity
+    function updateActivity() {
+        const activityList = document.getElementById('recent-activity');
+        
+        fetch('/api/tasks')
+            .then(response => response.json())
+            .then(data => {
+                if (data.result_count > 0) {
+                    return fetch('/tasks');
+                } else {
+                    throw new Error('No recent activity');
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Extract results from HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const results = Array.from(doc.querySelectorAll('#results-table tbody tr')).slice(0, 5);
+                
+                if (results.length > 0) {
+                    activityList.innerHTML = '';
+                    results.forEach(result => {
+                        const taskType = result.cells[0].textContent;
+                        const success = result.cells[1].textContent === 'True';
+                        const message = result.cells[2].textContent;
+                        const time = result.cells[3].textContent;
+                        
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge ${success ? 'bg-success' : 'bg-danger'} me-2">${success ? 'Success' : 'Failed'}</span>
+                                    <strong>${taskType}</strong>: ${message}
+                                </div>
+                                <small class="text-muted">${time}</small>
+                            </div>
+                        `;
+                        activityList.appendChild(li);
+                    });
+                } else {
+                    activityList.innerHTML = '<li class="list-group-item text-center">No recent activity</li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating activity:', error);
+                activityList.innerHTML = '<li class="list-group-item text-center">No recent activity</li>';
+            });
+    }
+    
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update stats immediately and then every 10 seconds
+        updateStats();
+        updateActivity();
+        setInterval(updateStats, 10000);
+        setInterval(updateActivity, 15000);
+        
+        // Toggle specific account input based on checkbox
+        document.getElementById('all-accounts').addEventListener('change', function() {
+            document.getElementById('specific-account-div').style.display = this.checked ? 'none' : 'block';
+        });
+        
+        // Create accounts button
+        document.getElementById('create-accounts-btn').addEventListener('click', function() {
+            const count = document.getElementById('account-count-input').value;
+            const domain = document.getElementById('email-domain').value;
+            const useProxy = document.getElementById('use-proxy').checked;
+            
+            const formData = new FormData();
+            formData.append('count', count);
+            formData.append('domain', domain);
+            formData.append('use_proxy', useProxy);
+            
+            fetch('/api/create_accounts', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('createAccountsModal')).hide();
+                    updateStats();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating accounts:', error);
+                alert('An error occurred while creating accounts');
+            });
+        });
+        
+        // Register platforms button
+        document.getElementById('register-platforms-btn').addEventListener('click', function() {
+            const platforms = document.getElementById('platforms').value;
+            const allAccounts = document.getElementById('all-accounts').checked;
+            const specificAccount = document.getElementById('specific-account').value;
+            
+            const formData = new FormData();
+            formData.append('platforms', platforms);
+            if (!allAccounts && specificAccount) {
+                formData.append('email', specificAccount);
+            }
+            
+            fetch('/api/register_platforms', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('registerPlatformsModal')).hide();
+                    updateStats();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error registering platforms:', error);
+                alert('An error occurred while registering platforms');
+            });
+        });
+        
+        // Airdrop participation button
+        document.getElementById('airdrop-btn').addEventListener('click', function() {
+            const airdropName = document.getElementById('airdrop-name').value;
+            const platform = document.getElementById('airdrop-platform').value;
+            const actions = document.getElementById('airdrop-actions').value;
+            
+            if (!airdropName) {
+                alert('Please enter the airdrop name');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('airdrop_name', airdropName);
+            formData.append('platform', platform);
+            formData.append('actions', actions);
+            
+            fetch('/api/airdrop', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('airdropModal')).hide();
+                    updateStats();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error participating in airdrop:', error);
+                alert('An error occurred while participating in airdrop');
+            });
+        });
+        
+        // Import proxies button
+        document.getElementById('import-proxies-btn').addEventListener('click', function() {
+            const proxyList = document.getElementById('proxy-list').value;
+            
+            if (!proxyList.trim()) {
+                alert('Please enter proxies');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('proxy_list', proxyList);
+            
+            fetch('/api/import_proxies', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Success: ${data.message}`);
+                    bootstrap.Modal.getInstance(document.getElementById('importProxiesModal')).hide();
+                    updateStats();
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error importing proxies:', error);
+                alert('An error occurred while importing proxies');
+            });
+        });
+    });
+</script>
+{% endblock %}

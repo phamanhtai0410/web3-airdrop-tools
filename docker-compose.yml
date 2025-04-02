@@ -1,0 +1,98 @@
+# Multi-container Docker setup
+
+version: '3.8'
+
+services:
+  # Main application service
+  airdrop-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "main.py"]
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - airdrop-network
+
+  # Worker containers for parallel processing
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - WORKER_MODE=true
+      - HEADLESS=true
+    command: ["python", "worker.py"]
+    deploy:
+      replicas: 3
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - airdrop-bot
+    networks:
+      - airdrop-network
+
+  # Redis for task queue and communication between containers
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - airdrop-network
+    command: redis-server --appendonly yes
+
+  # Proxy checker service
+  proxy-checker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SERVICE_TYPE=proxy-checker
+    command: ["python", "proxy_checker.py"]
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - airdrop-network
+
+  # Admin web interface (optional)
+  admin-ui:
+    build:
+      context: ./admin-ui
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - airdrop-bot
+    networks:
+      - airdrop-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+networks:
+  airdrop-network:
+    driver: bridge
